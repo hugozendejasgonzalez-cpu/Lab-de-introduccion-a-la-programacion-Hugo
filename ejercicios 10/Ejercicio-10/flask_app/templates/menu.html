@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: white;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 50px;
+            font-weight: 600;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            width: 280px;
+            height: 360px;
+            border-radius: 20px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            transition: 0.4s;
+        }
+
+        /* Gradientes distintos por card */
+        .card:nth-child(1) {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .card:nth-child(2) {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+        }
+
+        .card:nth-child(3) {
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+        }
+
+        .card:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .card h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .card p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .btn {
+            padding: 12px;
+            border-radius: 30px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn:hover {
+            background: white;
+            color: black;
+        }
+
+        .logout {
+            text-align: center;
+            margin-top: 60px;
+        }
+
+        .logout button {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+
+        .logout button:hover {
+            background: white;
+            color: black;
+        }
+    </style>
+
+</head>
+<body>
+
+<h1>Menu</h1>
+
+<div class="container">
+
+    <div class="card">
+        <div>
+            <h2>Números</h2>
+            <p>Clasifica números en pares, impares, positivos o negativos.</p>
+        </div>
+        <a href="/accion/numeros">
+            <button class="btn">Clasificar</button>
+        </a>
+    </div>
+
+    <div class="card">
+        <div>
+            <h2>Edad</h2>
+            <p>Consulta categorías de edad y validaciones.</p>
+        </div>
+        <a href="/accion/edad">
+            <button class="btn">Categoría</button>
+        </a>
+    </div>
+
+    <div class="card">
+        <div>
+            <h2>Tarifa</h2>
+            <p>Calcula precios con recargos y descuentos.</p>
+        </div>
+        <a href="/accion/tarifa">
+            <button class="btn">Calcular</button>
+        </a>
+    </div>
+
+</div>
+
+<div class="logout">
+    <a href="/logout">
+        <button>Cerrar sesión</button>
+    </a>
+</div>
+
+</body>
+</html>

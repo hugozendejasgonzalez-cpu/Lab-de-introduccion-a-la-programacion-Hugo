@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-box {
+            backdrop-filter: blur(15px);
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 16px;
+            width: 320px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        }
+
+        h1 {
+            margin-bottom: 25px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255,255,255,0.08);
+            color: white;
+            outline: none;
+        }
+
+        input::placeholder {
+            color: #bbb;
+        }
+
+        input:focus {
+            border: 1px solid #00f5d4;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            border-radius: 30px;
+            border: none;
+            background: linear-gradient(90deg, #00f5d4, #00bbf9);
+            color: black;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px #00f5d4;
+        }
+
+        .error { color: #ff4d6d; margin-top: 10px; }
+        .warning { color: #ffd166; margin-top: 10px; }
+    </style>
+</head>
+
+<body>
+
+<div class="login-box">
+    <h1>Login</h1>
+
+    <form method="POST">
+        <input type="text" name="user" placeholder="Usuario">
+        <input type="password" name="password" placeholder="Contraseña">
+        <button type="submit">Entrar</button>
+    </form>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    {% if warning %}
+        <p class="warning">{{ warning }}</p>
+    {% endif %}
+</div>
+
+</body>
+</html>

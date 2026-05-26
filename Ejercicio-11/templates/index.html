@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenCV Scanner Universal</title>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: white; text-align: center; margin: 0; }
+        .container { padding: 20px; }
+        video { width: 100%; max-width: 500px; border: 3px solid #4CAF50; border-radius: 10px; }
+        #log { margin-top: 20px; font-size: 1.2em; color: #4CAF50; font-weight: bold; }
+        canvas { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Escáner Pyzbar + Flask</h1>
+        <video id="video" autoplay playsinline></video>
+        <div id="log">Buscando código...</div>
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const log = document.getElementById('log');
+
+        const constraints = {
+            video: { facingMode: "environment" }
+        };
+
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(stream => { video.srcObject = stream; })
+            .catch(err => { log.innerText = "Error: No se pudo acceder a la cámara"; });
+
+        setInterval(() => {
+            if (video.videoWidth === 0) return;
+
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+
+            fetch('/scanner', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: dataUrl })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "ok") {
+                    log.innerText = `Leído: ${data.value}`;
+
+                    if (navigator.vibrate) navigator.vibrate(200);
+                }
+            });
+        }, 600);
+    </script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>Scanner Real-Time OpenCV</title>
+    <style>
+        :root {
+            --primary: #007aff;
+            --danger: #ff3b30;
+            --success: #34c759;
+            --bg: #f2f2f7;
+        }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            padding: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+
+        .container { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 20px; 
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08); 
+            width: 100%; 
+            max-width: 500px; 
+            box-sizing: border-box;
+        }
+
+        h2 { text-align: center; color: #1c1c1e; margin: 0 0 20px 0; font-size: 22px; }
+
+        /* Cámara */
+        #video-container { 
+            width: 100%; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            background: #000; 
+            margin-bottom: 20px; 
+            border: 3px solid var(--primary);
+            aspect-ratio: 4 / 3;
+            position: relative;
+        }
+        video { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Formulario */
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-size: 12px; font-weight: 600; color: #8e8e93; margin-bottom: 4px; text-transform: uppercase; }
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #d1d1d6; 
+            border-radius: 10px; 
+            box-sizing: border-box; 
+            font-size: 16px; 
+            -webkit-appearance: none;
+        }
+        .readonly-input { background: #f2f2f7; color: var(--success); font-weight: bold; border-color: #34c759; }
+
+        /* Botones */
+        button { 
+            width: 100%; 
+            padding: 16px; 
+            border: none; 
+            border-radius: 14px; 
+            font-size: 17px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.2s;
+        }
+        .btn-save { background: var(--primary); color: white; margin-top: 10px; }
+        .btn-save:active { transform: scale(0.96); opacity: 0.9; }
+        
+        .btn-delete { 
+            background: var(--danger); 
+            color: white; 
+            padding: 6px 12px; 
+            font-size: 12px; 
+            width: auto; 
+            border-radius: 8px;
+        }
+
+        /* Tabla Automática */
+        .table-section { width: 100%; margin-top: 25px; }
+        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .table-header h3 { margin: 0; font-size: 18px; color: #1c1c1e; }
+        .live-indicator { font-size: 11px; color: var(--success); font-weight: bold; display: flex; align-items: center; }
+        .live-indicator::before { content: "●"; margin-right: 4px; animation: blink 1s infinite; }
+
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        .table-wrapper { 
+            width: 100%; 
+            overflow-x: auto; 
+            border: 1px solid #e5e5ea;
+            border-radius: 12px;
+        }
+        table { width: 100%; border-collapse: collapse; background: white; font-size: 14px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f2f2f7; }
+        th { background: #f9f9fb; color: #8e8e93; font-size: 11px; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Inventario Live</h2>
+    
+    <div id="video-container">
+        <video id="video" autoplay playsinline></video>
+    </div>
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <div class="form-group">
+        <label>Código Escaneado (OpenCV)</label>
+        <input type="text" id="cod" class="readonly-input" placeholder="Esperando código..." readonly>
+    </div>
+
+    <div class="form-group">
+        <label>ID Producto</label>
+        <input type="text" id="id_p" placeholder="Ej: SKU-001">
+    </div>
+
+    <div class="form-group">
+        <label>Nombre</label>
+        <input type="text" id="nom" placeholder="Ej: Coca Cola 2L">
+    </div>
+
+    <div class="form-group">
+        <label>Número</label>
+        <input type="number" id="num_p" placeholder="Ej: 500">
+    </div>
+
+    <button class="btn-save" onclick="registrar()">Guardar Producto</button>
+
+    <div class="table-section">
+        <div class="table-header">
+            <h3>Registros en PC</h3>
+            <div class="live-indicator">TIEMPO REAL</div>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Producto</th>
+                        <th>Código</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpo_tabla"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const codInput = document.getElementById('cod');
+
+    // 1. Iniciar Cámara
+    navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: "environment", width: 640, height: 480 } 
+    }).then(stream => { video.srcObject = stream; });
+
+    // 2. Procesamiento OpenCV (cada 600ms enviamos al Ryzen)
+    setInterval(async () => {
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            const blob = canvas.toDataURL('image/jpeg', 0.5);
+            
+            try {
+                const res = await fetch('/procesar', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ image: blob })
+                });
+                const data = await res.json();
+                if(data.codigo) {
+                    codInput.value = data.codigo;
+                    if(navigator.vibrate) navigator.vibrate(50);
+                }
+            } catch (e) {}
+        }
+    }, 600);
+
+    // 3. Registrar y Limpiar
+    async function registrar() {
+        const payload = {
+            id_p: document.getElementById('id_p').value,
+            nom: document.getElementById('nom').value,
+            cod: codInput.value,
+            num_p: document.getElementById('num_p').value
+        };
+
+        if(!payload.id_p || !payload.cod) return alert("Escanea un código primero");
+
+        const res = await fetch('/guardar', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+
+        if(res.ok) {
+            // Limpieza inmediata para el siguiente producto
+            document.getElementById('id_p').value = "";
+            document.getElementById('nom').value = "";
+            document.getElementById('cod').value = "";
+            document.getElementById('num_p').value = "";
+            cargarTabla(); 
+        }
+    }
+
+    // 4. Actualización en TIEMPO REAL (cada 2 segundos)
+    async function cargarTabla() {
+        try {
+            const res = await fetch('/obtener_productos');
+            const productos = await res.json();
+            const cuerpo = document.getElementById('cuerpo_tabla');
+            cuerpo.innerHTML = "";
+            
+            productos.forEach(p => {
+                cuerpo.innerHTML += `<tr>
+                    <td><b>${p.id_producto}</b></td>
+                    <td>${p.nombre}</td>
+                    <td style="color:#666">${p.codigo}</td>
+                    <td><button class="btn-delete" onclick="eliminar('${p.id_producto}')">×</button></td>
+                </tr>`;
+            });
+        } catch (e) {}
+    }
+
+    async function eliminar(id) {
+        if(confirm("¿Borrar?")) {
+            await fetch(`/eliminar/${id}`, { method: 'DELETE' });
+            cargarTabla();
+        }
+    }
+
+    // Iniciar Polling
+    setInterval(cargarTabla, 1000);
+    window.onload = cargarTabla;
+</script>
+
+</body>
+</html>
